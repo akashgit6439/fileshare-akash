@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <title>fileshare</title>
+</head>
+
+<body>
+    <div class="container">
+    <div class="card text-center margin ">
+        
+        <div class="card-body">
+            <img class="upload-img" src="/img/upload1.png">
+            <div>
+                <h5><label>Upload your file</label></h5>
+                <input type="file" name="myfile" id="inputfile" />
+                <input type="submit" id="submitbtn"value="Upload" />
+            </div>
+
+        </div>
+    <input class="link-show hidden" id="link">
+    <br>
+   
+    <div id="email-box" class="text-center hidden">
+        <h5>OR SEND AN EMAIL</h5>
+        <form id="emailForm">
+            <div class="filed text-center">
+                <label for="fromEmail">Your email:</label>
+                <input type="email" autocomplete="email" required name="from-email" id="fromEmail">
+                <br>
+                <label for="toEmail">Receiver's email:</label>
+                <input type="email" required autocomplete="receiver" name="to-email" id="toEmail">
+            </div>
+            <div class="send-btn-container my-2">
+                <button class="btn btn-outline-primary" type="submit">Send</button>
+            </div>
+        </form>
+    </div>
+    </div>
+    </div>
+
+
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script>
+    
+         const input = document.getElementById('inputfile');    
+        // add event listener
+        document.getElementById('submitbtn').addEventListener('click', () => {
+           
+            uploadFile(input.files[0]);
+        });
+
+        const uploadFile = (file) => {
+
+                const url= '<%= process.env.APP_BASE_URL%>/files';
+                 console.log(input.files[0]);
+                // add file to FormData object
+                const fd = new FormData();
+                fd.append('myfile', file);
+
+                // send `POST` request
+                fetch(url, {
+                    method: 'POST',
+                    body: fd
+                })
+                    .then(res => {
+                        console.log(res);
+                        return res.json();
+                    })
+                    .then(json =>{
+                        console.log(json['downloadpage']);
+                        document.getElementById('link').value = json['downloadpage'];
+                        document.getElementById('link').classList.remove('hidden');
+                        document.getElementById('email-box').classList.remove('hidden');
+                    })
+                    .catch(err => console.log(err));
+            }
+
+            document.getElementById('link').addEventListener('click',()=>{
+                   var copyText = document.getElementById("link");
+
+                /* Select the text field */
+                copyText.select();
+                copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+
+                /* Copy the text inside the text field */
+                document.execCommand("copy");
+
+                /* Alert the copied text */
+                alert("Copied the text: " + copyText.value);
+            });
+
+            //to send an email
+            
+            const emailForm=document.getElementById('emailForm');
+            const fileURL=document.getElementById('link');
+            const emailURL= '<%= process.env.APP_BASE_URL%>/files/api/send';
+
+            emailForm.addEventListener("submit", (e) => {
+                    e.preventDefault(); // stop submission
+
+                    // disable the button
+                    console.log(emailForm[2]);
+                    emailForm[2].setAttribute("disabled", "true");
+                    emailForm[2].innerText = "Sending";
+
+                    const url = fileURL.value;
+                     console.log(url.split("/"));
+                    const formData = {
+                        uuid: url.split("/").splice(-1, 1)[0],
+                        emailTo: emailForm.elements["to-email"].value,
+                        emailFrom: emailForm.elements["from-email"].value,
+                    };
+                    console.log(formData);
+                    fetch(emailURL, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(formData),
+                    })
+                        .then((res) => res.json())
+                        .then((data) => {
+                            if (data.success) {
+                              alert("Email has been sent");
+                            }else{
+                                alert("Email has not been sent");
+                            }
+                        });
+                });
+
+    </script>
+</body>
+
+</html>
