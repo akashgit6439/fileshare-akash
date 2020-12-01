@@ -25,6 +25,11 @@
                 <input type="file" name="myfile" id="inputfile" />
                 <input type="submit" id="submitbtn"value="Upload" />
             </div>
+            <br>
+            <div class="progress" id="progressbar">
+                <div class="progress-bar" id="p" role="progressbar" style="width: 0%;" aria-valuenow="25" aria-valuemin="0"
+                    aria-valuemax="100"><span id="percent">0%</span></div>
+            </div>
 
         </div>
     <input class="link-show hidden" id="link">
@@ -66,6 +71,8 @@
     <script>
     
          const input = document.getElementById('inputfile');    
+         const progressbar=document.getElementById('p');
+         const percent=document.getElementById('percent');
         // add event listener
         document.getElementById('submitbtn').addEventListener('click', () => {
            
@@ -75,7 +82,27 @@
         const uploadFile = (file) => {
 
                 const url= '<%= process.env.APP_BASE_URL%>/files';
-                 console.log(input.files[0]);
+                const fd = new FormData();
+                fd.append('myfile', file);
+                const xhr=new XMLHttpRequest();
+
+                xhr.onreadystatechange=()=>{
+                    if(xhr.readyState===XMLHttpRequest.DONE){
+                      const jsonlink = JSON.parse(xhr.response);
+                      console.log(jsonlink['downloadpage']);
+                      document.getElementById('link').value = jsonlink;
+                      document.getElementById('link').classList.remove('hidden');
+                      document.getElementById('email-box').classList.remove('hidden');
+                      
+                    }
+                };
+
+                xhr.upload.onprogress=updateprogress;
+
+                xhr.open("POST",url);
+                xhr.send(fd);
+
+                /* console.log(input.files[0]);
                 // add file to FormData object
                 const fd = new FormData();
                 fd.append('myfile', file);
@@ -95,8 +122,15 @@
                         document.getElementById('link').classList.remove('hidden');
                         document.getElementById('email-box').classList.remove('hidden');
                     })
-                    .catch(err => console.log(err));
+                    .catch(err => console.log(err));*/
             }
+
+            const updateprogress=(e)=>{
+               const percentage= Math.round((e.loaded/e.total)*100);
+               console.log(percentage);
+               progressbar.style.width=`${percentage}%`;
+               percent.innerText=percentage+"%";
+            };
 
             document.getElementById('link').addEventListener('click',()=>{
                    var copyText = document.getElementById("link");
