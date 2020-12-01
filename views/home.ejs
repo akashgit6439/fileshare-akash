@@ -90,7 +90,7 @@
                     if(xhr.readyState===XMLHttpRequest.DONE){
                       const jsonlink = JSON.parse(xhr.response);
                       console.log(jsonlink['downloadpage']);
-                      document.getElementById('link').value = jsonlink;
+                      document.getElementById('link').value = jsonlink['downloadpage'];
                       document.getElementById('link').classList.remove('hidden');
                       document.getElementById('email-box').classList.remove('hidden');
                       
